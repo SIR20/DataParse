@@ -1,0 +1,14 @@
+C:\Users\kylys\source\repos\DataParse\DataParse\bin\Debug\DataParse.exe.config
+C:\Users\kylys\source\repos\DataParse\DataParse\bin\Debug\DataParse.exe
+C:\Users\kylys\source\repos\DataParse\DataParse\bin\Debug\DataParse.pdb
+C:\Users\kylys\source\repos\DataParse\DataParse\obj\Debug\DataParse.csproj.AssemblyReference.cache
+C:\Users\kylys\source\repos\DataParse\DataParse\obj\Debug\DataParse.csproj.CoreCompileInputs.cache
+C:\Users\kylys\source\repos\DataParse\DataParse\obj\Debug\DataParse.exe
+C:\Users\kylys\source\repos\DataParse\DataParse\obj\Debug\DataParse.pdb
+C:\Users\kylys\source\repos\DataParse\DataParse\bin\Debug\EPPlus.dll
+C:\Users\kylys\source\repos\DataParse\DataParse\bin\Debug\EPPlus.Interfaces.dll
+C:\Users\kylys\source\repos\DataParse\DataParse\bin\Debug\EPPlus.System.Drawing.dll
+C:\Users\kylys\source\repos\DataParse\DataParse\bin\Debug\Microsoft.IO.RecyclableMemoryStream.dll
+C:\Users\kylys\source\repos\DataParse\DataParse\bin\Debug\EPPlus.xml
+C:\Users\kylys\source\repos\DataParse\DataParse\bin\Debug\Microsoft.IO.RecyclableMemoryStream.xml
+C:\Users\kylys\source\repos\DataParse\DataParse\obj\Debug\DataParse.csproj.CopyComplete
