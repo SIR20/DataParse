@@ -13,77 +13,116 @@ namespace DataParse
     {
         static void Main(string[] args)
         {
-            bool isRepeat;
-            do
-            {
-                isRepeat = false;
-                Console.Write("Введите путь к файлу: ");
-                string fileName = Console.ReadLine();
-                Console.WriteLine("Создание отчета...");
-                List<string> lines = File.ReadAllLines(fileName).ToList();
-
-                ExcelPackage package = new ExcelPackage();
-                ExcelPackage.LicenseContext = LicenseContext.Commercial;
-                ExcelWorksheet sheet = package.Workbook.Worksheets.Add("Отчет");
-
-                sheet.Cells["A1"].Value = "Логин";
-                sheet.Cells["B1"].Value = "Компьютер";
-                sheet.Cells["C1"].Value = "Программа";
-                sheet.Cells["D1"].Value = "Заголовок";
-                sheet.Cells["E1"].Value = "Дата и время";
-
-                int index = 2;
-                lines.ForEach(i =>
-                {
-                    string date = i.GetString(0, i.IndexOf("__"));
-                    string time = i.GetString(i.IndexOf("__") + 2, i.IndexOf("^^^")).Replace('-', ':');
-                    time = time.GetString(0, time.LastIndexOf(':'));
-
-                    DateTime myDate = DateTime.ParseExact($"{date} {time}", "yyyy-MM-dd HH:mm:ss",
-                                           System.Globalization.CultureInfo.InvariantCulture);
-
-                    string userLogin = new Regex(@"\^{3}\w*\^{3}").Match(i).Value.Replace("^", "");
-                    string computer = new Regex(@"\^{3}\w*\^{6}").Match(i).Value.Replace("^", "");
-                    string programName = new Regex(@"\^{6}.*\^{3}").Match(i).Value.Replace("^", "");
-                    string programHeader = new Regex(@"\^{3}.+?#{4}").Match(i).Value;
-                    programHeader = programHeader.GetString(programHeader.LastIndexOf("^^^"), programHeader.Length).Replace("^", "").Replace("#", "");
-
-                    sheet.Cells[$"A{index}"].Value = userLogin;
-                    sheet.Cells[$"B{index}"].Value = computer;
-                    sheet.Cells[$"C{index}"].Value = programName;
-                    sheet.Cells[$"D{index}"].Value = programHeader;
-                    sheet.Cells[$"E{index}"].Value = $"{date} {time}";
-                    index++;
-                });
-
-                try
-                {
-                    File.WriteAllBytes("Отчет по сотрудникам.xlsx", package.GetAsByteArray());
-                    Console.WriteLine("Отчет создан.Открыть?y/n");
-                    ConsoleKey key = Console.ReadKey(true).Key;
-                    if (key == ConsoleKey.Y)
-                    {
-                        Process.Start("Отчет по сотрудникам.xlsx");
-                    }
-                }
-                catch (IOException e)
-                {
-                    Console.WriteLine("Ошибка при сохранении отчета.Возможно отчет уже открыт");
-                }
-                finally
-                {
-                    Console.WriteLine("Перезапустить программу?y/n");
-                    ConsoleKey key = Console.ReadKey(true).Key;
-                    if (key == ConsoleKey.Y)
-                    {
-                        isRepeat = true;
-                    }
-                }
-
-                Console.Clear();
-            }
-            while (isRepeat);
+           
+            Console.Write("Введите путь к файлу: ");
+            string fileName = Console.ReadLine();
+            CreateReport(fileName);
         }
+
+        static void CreateReport(string fileName)
+        {
+            string reportFileName = Path.GetDirectoryName(fileName) + @"\" + Path.GetFileNameWithoutExtension(fileName) + ".xlsx";
+            Dictionary<string, App> apps = new Dictionary<string, App>();
+
+            ExcelPackage package = new ExcelPackage();
+            ExcelPackage.LicenseContext = LicenseContext.Commercial;
+            ExcelWorksheet sheet = package.Workbook.Worksheets.Add("Отчет");
+
+            Console.WriteLine("Создание отчета...");
+
+            sheet.Cells["A1"].Value = "Программа";
+            sheet.Cells["B1"].Value = "Время";
+            sheet.Cells["C1"].Value = "Итого:";
+
+            List<string> lines = File.ReadAllLines(fileName).ToList();
+            lines.ForEach(i =>
+            {
+                string date = i.GetString(0, i.IndexOf("__"));
+                string time = i.GetString(i.IndexOf("__") + 2, i.IndexOf("^^^")).Replace('-', ':');
+                time = time.GetString(0, time.LastIndexOf(':'));
+                DateTime openTime = DateTime.ParseExact($"{date} {time}", "yyyy-MM-dd HH:mm:ss",
+                                       System.Globalization.CultureInfo.InvariantCulture);
+
+                string programName = new Regex(@"\^{6}.*\^{3}").Match(i).Value.Replace("^", "");
+                string programHeader = new Regex(@"\^{3}.+?#{4}").Match(i).Value;
+                programHeader = programHeader.GetString(programHeader.LastIndexOf("^^^"), programHeader.Length).Replace("^", "").Replace("#", "");
+
+                if (apps.ContainsKey(programName))
+                {
+                    apps[programName].AddOpenTime(programHeader, openTime);
+                }
+                else
+                {
+                    App app = new App(programName);
+                    app.AddOpenTime(programHeader, openTime);
+                    apps.Add(programName, app);
+                }
+            });
+
+            int allTimeSecond = 0;
+            int index = 3;
+            apps.Keys.ToList().ForEach(programName =>
+            {
+                
+                int timeSecond = 0;
+                List<OpenTime> openTimes = apps[programName].OpenTimes;
+                openTimes.ForEach(j =>
+                {
+                    timeSecond += j.Time.Second;
+                });
+                TimeSpan time = TimeSpan.FromSeconds(timeSecond);
+
+                sheet.Cells[$"A{index}"].Value = programName;
+                sheet.Cells[$"B{index}"].Value = $"{time.Days}дн.{time.Hours}ч.{time.Minutes}м.{time.Seconds}с.";
+
+                allTimeSecond += timeSecond;
+                index++;
+            });
+
+            TimeSpan allTime = TimeSpan.FromSeconds(allTimeSecond);
+            sheet.Cells[$"C2"].Value = $"{allTime.Days}дн.{allTime.Hours}ч.{allTime.Minutes}м.{allTime.Seconds}с.";
+
+            try
+            {
+                File.WriteAllBytes(reportFileName, package.GetAsByteArray());
+                Console.WriteLine("Отчет создан.Открыть?y/n");
+                ConsoleKey key = Console.ReadKey(true).Key;
+                if (key == ConsoleKey.Y)
+                {
+                    Process.Start(reportFileName);
+                }
+            }
+            catch (IOException)
+            {
+                Console.WriteLine("Ошибка при сохранении отчета.Возможно отчет уже открыт");
+            }
+        }
+    }
+
+    class App
+    {
+        public App(string name)
+        {
+            Name = name;
+            OpenTimes = new List<OpenTime>();
+        }
+
+        public string Name { get; set; }
+        public List<OpenTime> OpenTimes { get; set; }
+
+        public void AddOpenTime(string header, DateTime time) => OpenTimes.Add(new OpenTime(header, time));
+    }
+
+    class OpenTime
+    {
+        public OpenTime(string header, DateTime time)
+        {
+            Header = header;
+            Time = time;
+        }
+
+        public string Header { get; set; }
+        public DateTime Time { get; set; }
     }
 
     static class StringExtension
