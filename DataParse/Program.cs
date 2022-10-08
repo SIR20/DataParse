@@ -31,8 +31,14 @@ namespace DataParse
             Console.WriteLine("Создание отчета...");
 
             sheet.Cells["A1"].Value = "Программа";
+            sheet.Columns[1].Width = 35;
+            
+
             sheet.Cells["B1"].Value = "Время";
+            sheet.Columns[2].Width = 18;
+
             sheet.Cells["C1"].Value = "Итого:";
+            sheet.Columns[3].Width = 17;
 
             List<string> lines = File.ReadAllLines(fileName).ToList();
             lines.ForEach(i =>
